@@ -136,7 +136,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 /set_chat_context - установить изначальный промпт для модели
 /clear_user_context - очистить текущий контекст
 /info - описание всех доступный на данный момент моделей
-/model_info - подробное описание выбранной в данный момент модели""")
+""")
 
 
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
