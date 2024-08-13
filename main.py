@@ -59,10 +59,10 @@ user_commands = [
     BotCommand("info", "Информация о моделях"),
 ]
 
-async def post_init(application: Application) -> None:
+async def post_init(bot: telegram.Bot) -> None:
     """Generates menu button with necessary commands"""
-    await application.bot.set_my_commands(user_commands)
-    await application.bot.set_chat_menu_button()
+    await bot.set_my_commands(user_commands)
+    await bot.set_chat_menu_button()
 
 def check_bot_restart(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Check if the bot has been restarted"""
@@ -79,7 +79,7 @@ def check_bot_restart(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Start the conversation and ask user for input."""
     await update.message.reply_text(
-        """Привет\! Это бот для удобной работы с большими языковыми моделями для сотрудников SberAI Lab \nИспользуй команду /help чтобы узнать больше о возможностях бота \nДефолтная модель для запросов: *GigaChat Lite*""",
+        """Привет\! Это бот для удобной работы с большими языковыми моделями\nИспользуй команду /help чтобы узнать больше о возможностях бота \nДефолтная модель для запросов: *GigaChat Lite*""",
         parse_mode='MarkdownV2'
     )
     user = context.user_data
@@ -94,6 +94,7 @@ async def generate_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     if check_bot_restart(update, context):
         await update.message.reply_text("Бот был перезапущен. Применены стандартные настройки")
+        await post_init(context.bot)
     await update.message.reply_text("Отправляю запрос в "+context.user_data["model_name"])
 
     messages = []
@@ -112,6 +113,7 @@ async def generate_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def model_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if check_bot_restart(update, context):
         await update.message.reply_text("Бот был перезапущен. Применены стандартные настройки")
+        await post_init(context.bot)
     msg = "Параметры текущей модели:\n"
     for key, value in context.user_data["model_info"]:
         msg += (str(key) + ": " + str(value))
@@ -121,6 +123,7 @@ async def model_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if check_bot_restart(update, context):
         await update.message.reply_text("Бот был перезапущен. Применены стандартные настройки")
+        await post_init(context.bot)
     await update.message.reply_text("""
 Для того, чтобы сделать запрос к выбранной модели просто наберите сообщение в чат
 
@@ -139,7 +142,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if check_bot_restart(update, context):
         await update.message.reply_text("Бот был перезапущен. Применены стандартные настройки")
-
+        await post_init(context.bot)
     await update.message.reply_text("""
 В данный момент доступны следующие модели для использования:
 GigaChat Lite - размер контекста 8192
@@ -150,7 +153,7 @@ async def clear_user_context(update: Update, context: ContextTypes.DEFAULT_TYPE)
     """Clears current context"""
     if check_bot_restart(update, context):
         await update.message.reply_text("Бот был перезапущен. Применены стандартные настройки")
-
+        await post_init(context.bot)
     if not context.user_data["context_status"]:
         await update.message.reply_text("В данный момент сохранение контекста отключено")
 
@@ -161,6 +164,8 @@ async def disable_chat_context(update: Update, context: ContextTypes.DEFAULT_TYP
     """Disable models context"""
     if check_bot_restart(update, context):
         await update.message.reply_text("Бот был перезапущен. Применены стандартные настройки")
+        await post_init(context.bot)
+
     if not context.user_data["context_status"]:
         await update.message.reply_text("Сохранение контекста уже отключено")
     context.user_data["context_status"] = False
@@ -171,6 +176,8 @@ async def enable_chat_context(update: Update, context: ContextTypes.DEFAULT_TYPE
     """Enables models context"""
     if check_bot_restart(update, context):
         await update.message.reply_text("Бот был перезапущен. Применены стандартные настройки")
+        await post_init(context.bot)
+
     if context.user_data["context_status"]:
         await update.message.reply_text("Сохранение контекста уже включено")
     else:
@@ -182,6 +189,8 @@ async def change_model_preset(update: Update, context: ContextTypes.DEFAULT_TYPE
     """Sends a message with list of models to choose from."""
     if check_bot_restart(update, context):
         await update.message.reply_text("Бот был перезапущен. Применены стандартные настройки")
+        await post_init(context.bot)
+
     keyboard = []
     for key, value in models.items():
         keyboard.append([InlineKeyboardButton(value["model_name"], callback_data=key)])
@@ -190,13 +199,12 @@ async def change_model_preset(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     await update.message.reply_text("Выберите модель:", reply_markup=reply_markup)
 
-async def report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    pass
-
 async def model_choice_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Parses the CallbackQuery and updates the message text."""
     if check_bot_restart(update, context):
         await update.message.reply_text("Бот был перезапущен. Применены стандартные настройки")
+        await post_init(context.bot)
+
     query = update.callback_query
 
     # CallbackQueries need to be answered, even if no notification to the user is needed
@@ -227,18 +235,24 @@ async def set_chat_context_final(update: Update, context: ContextTypes.DEFAULT_T
 async def set_chat_context(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if check_bot_restart(update, context):
         await update.message.reply_text("Бот был перезапущен. Применены стандартные настройки")
+        await post_init(context.bot)
+
     await update.message.reply_text("Введите сообщение, которое хотите использовать как системный контекст. Используйте /cancel для отмены действия")
     return 0
 
 async def cancel_set_chat_context(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if check_bot_restart(update, context):
         await update.message.reply_text("Бот был перезапущен. Применены стандартные настройки")
+        await post_init(context.bot)
+
     await update.message.reply_text("Действие отменено")
     return ConversationHandler.END
 
 async def show_current_context(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if check_bot_restart(update, context):
         await update.message.reply_text("Бот был перезапущен. Применены стандартные настройки")
+        await post_init(context.bot)
+
     if context.user_data["context_status"]:
         messages = []
         for item in context.user_data["context"]:
